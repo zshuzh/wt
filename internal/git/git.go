@@ -71,3 +71,12 @@ func GetBranches() ([]string, error) {
 
 	return branches, nil
 }
+
+func GetRepoRoot() (string, error) {
+	output, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(string(output)), nil
+}

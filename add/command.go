@@ -1,8 +1,6 @@
 package add
 
 import (
-	"os"
-
 	"github.com/charmbracelet/huh"
 	"github.com/zshuzh/wt/internal/git"
 )
@@ -10,12 +8,12 @@ import (
 type Options struct{}
 
 func (o Options) Run() error {
-	cwd, err := os.Getwd()
+	root, err := git.GetRepoRoot()
 	if err != nil {
 		return err
 	}
 
-	path := cwd
+	path := root
 	var branch string
 
 	branches, err := git.GetBranches()

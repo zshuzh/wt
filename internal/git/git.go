@@ -73,10 +73,17 @@ func GetBranches() ([]string, error) {
 }
 
 func GetRepoRoot() (string, error) {
-	output, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
+	output, err := exec.Command("git", "worktree", "list", "--porcelain").Output()
 	if err != nil {
 		return "", err
 	}
 
-	return strings.TrimSpace(string(output)), nil
+	// first worktree in the list is the main worktree
+	for line := range strings.SplitSeq(string(output), "\n") {
+		if path, ok := strings.CutPrefix(line, "worktree "); ok {
+			return path, nil
+		}
+	}
+
+	return "", nil
 }

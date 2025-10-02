@@ -43,3 +43,27 @@ func GetWorktrees() ([]Worktree, error) {
 
 	return worktrees, nil
 }
+
+func AddWorktree(wt Worktree) error {
+	return exec.Command("git", "worktree", "add", wt.Path, wt.Branch).Run()
+}
+
+func GetBranches() ([]string, error) {
+	output, err := exec.Command("git", "branch", "--format=%(refname:short)").Output()
+	if err != nil {
+		return nil, err
+	}
+
+	var branches []string
+	for line := range strings.SplitSeq(strings.TrimSpace(string(output)), "\n") {
+		line = strings.TrimSpace(line)
+
+		if strings.HasPrefix(line, "graphite-base/") {
+			continue
+		}
+
+		branches = append(branches, line)
+	}
+
+	return branches, nil
+}

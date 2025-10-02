@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alecthomas/kong"
+	"github.com/zshuzh/wt/add"
 	"github.com/zshuzh/wt/configure"
 	"github.com/zshuzh/wt/list"
 	switchcmd "github.com/zshuzh/wt/switch"
@@ -14,6 +15,7 @@ type Wt struct {
 	Configure configure.Options `cmd:"" help:"Start the wt setup wizard"`
 	List      list.Options      `cmd:"" help:"List current worktrees"`
 	Switch    switchcmd.Options `cmd:"" help:"Switch to a worktree"`
+	Add       add.Options       `cmd:"" help:"Add a new worktree"`
 }
 
 func main() {

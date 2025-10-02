@@ -33,7 +33,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case worktreesMsg:
 		m.worktrees = msg
 		m.loading = false
-		return m, nil
+		return m, tea.Quit
 
 	case errMsg:
 		m.err = msg
@@ -60,7 +60,7 @@ func (m model) View() string {
 	}
 
 	if len(m.worktrees) == 0 {
-		return "No worktrees found.\n\nPress q to quit.\n"
+		return "No worktrees found.\n"
 	}
 
 	s := "Git Worktrees:\n\n"
@@ -68,8 +68,6 @@ func (m model) View() string {
 	for _, wt := range m.worktrees {
 		s += fmt.Sprintf("%s - %s\n", wt.Path, wt.Branch)
 	}
-
-	s += "\nPress q to quit.\n"
 
 	return s
 }

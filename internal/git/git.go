@@ -48,6 +48,10 @@ func AddWorktree(wt Worktree) error {
 	return exec.Command("git", "worktree", "add", wt.Path, wt.Branch).Run()
 }
 
+func RemoveWorktree(path string) error {
+	return exec.Command("git", "worktree", "remove", path).Run()
+}
+
 func GetBranches() ([]string, error) {
 	output, err := exec.Command("git", "branch", "--format=%(refname:short)").Output()
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"github.com/zshuzh/wt/add"
 	"github.com/zshuzh/wt/configure"
 	"github.com/zshuzh/wt/list"
+	"github.com/zshuzh/wt/remove"
 	switchcmd "github.com/zshuzh/wt/switch"
 )
 
@@ -16,6 +17,7 @@ type Wt struct {
 	List      list.Options      `cmd:"" help:"List current worktrees"`
 	Switch    switchcmd.Options `cmd:"" help:"Switch to a worktree"`
 	Add       add.Options       `cmd:"" help:"Add a new worktree"`
+	Remove    remove.Options    `cmd:"" help:"Remove an existing worktree"`
 }
 
 func main() {

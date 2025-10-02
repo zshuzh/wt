@@ -2,56 +2,24 @@ package list
 
 import (
 	"fmt"
-	"os/exec"
-	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/zshuzh/wt/internal/git"
 )
 
-type Worktree struct {
-	Path   string
-	Branch string
-}
-
-type worktreesMsg []Worktree
+type worktreesMsg []git.Worktree
 type errMsg error
 
 func getWorktrees() tea.Msg {
-	output, err := exec.Command("git", "worktree", "list", "--porcelain").Output()
+	worktrees, err := git.GetWorktrees()
 	if err != nil {
 		return errMsg(err)
 	}
-
-	var worktrees []Worktree
-	var currentPath string
-	var currentBranch string
-
-	for line := range strings.SplitSeq(string(output), "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" { // blank line separates worktrees
-			if currentPath != "" {
-				worktrees = append(worktrees, Worktree{
-					Path:   currentPath,
-					Branch: currentBranch,
-				})
-				currentPath = ""
-				currentBranch = ""
-			}
-			continue
-		}
-
-		if path, ok := strings.CutPrefix(line, "worktree "); ok {
-			currentPath = path
-		} else if branch, ok := strings.CutPrefix(line, "branch "); ok {
-			currentBranch = strings.TrimPrefix(branch, "refs/heads/")
-		}
-	}
-
 	return worktreesMsg(worktrees)
 }
 
 type model struct {
-	worktrees []Worktree
+	worktrees []git.Worktree
 	loading   bool
 	err       error
 }

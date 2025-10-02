@@ -9,6 +9,7 @@ import (
 
 type worktreesMsg []git.Worktree
 type errMsg error
+type successMsg struct{}
 
 func getWorktrees() tea.Msg {
 	worktrees, err := git.GetWorktrees()
@@ -16,6 +17,17 @@ func getWorktrees() tea.Msg {
 		return errMsg(err)
 	}
 	return worktreesMsg(worktrees)
+}
+
+func removeWorktree(path string) tea.Cmd {
+	return func() tea.Msg {
+		err := git.RemoveWorktree(path)
+		if err != nil {
+			return errMsg(err)
+		}
+
+		return successMsg{}
+	}
 }
 
 type model struct {
@@ -41,6 +53,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.loading = false
 		return m, nil
 
+	case successMsg:
+		return m, tea.Quit
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -57,14 +72,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "enter":
-			if len(m.worktrees) > 0 {
-				err := git.RemoveWorktree(m.worktrees[m.cursor].Path)
-				if err != nil {
-					m.err = err
-					return m, nil
-				}
-			}
-			return m, tea.Quit
+			return m, removeWorktree(m.worktrees[m.cursor].Path)
 		}
 	}
 

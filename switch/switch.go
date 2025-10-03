@@ -7,7 +7,11 @@ import (
 	"github.com/zshuzh/wt/internal/git"
 )
 
-type worktreesMsg []git.Worktree
+type worktreesMsg struct {
+	worktrees       []git.Worktree
+	currentWorktree git.Worktree
+}
+
 type errMsg error
 
 func getWorktrees() tea.Msg {
@@ -15,7 +19,16 @@ func getWorktrees() tea.Msg {
 	if err != nil {
 		return errMsg(err)
 	}
-	return worktreesMsg(worktrees)
+
+	currentWorktree, err := git.GetCurrentWorktree()
+	if err != nil {
+		currentWorktree = git.Worktree{} // Not in a worktree or error
+	}
+
+	return worktreesMsg{
+		worktrees:       worktrees,
+		currentWorktree: currentWorktree,
+	}
 }
 
 type model struct {
@@ -32,8 +45,16 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case worktreesMsg:
-		m.worktrees = msg
+		m.worktrees = msg.worktrees
 		m.loading = false
+
+		for i, wt := range msg.worktrees {
+			if wt.Path == msg.currentWorktree.Path {
+				m.cursor = i
+				break
+			}
+		}
+
 		return m, nil
 
 	case errMsg:

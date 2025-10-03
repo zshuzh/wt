@@ -133,6 +133,11 @@ func (o Options) Run() error {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
+		cmd.Env = append(os.Environ(),
+			"WT_WORKTREE_PATH="+path,
+			"WT_WORKTREE_BRANCH="+branch,
+			"WT_REPO_ROOT="+root,
+		)		
 
 		if err := cmd.Run(); err != nil {
 			fmt.Printf("Hook failed: %v\n", err)

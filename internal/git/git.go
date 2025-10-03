@@ -87,3 +87,20 @@ func GetRepoRoot() (string, error) {
 
 	return "", nil
 }
+
+func GetCurrentWorktree() (Worktree, error) {
+	path, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
+	if err != nil {
+		return Worktree{}, err
+	}
+
+	branch, err := exec.Command("git", "branch", "--show-current").Output()
+	if err != nil {
+		return Worktree{}, err
+	}
+
+	return Worktree{
+		Path:   strings.TrimSpace(string(path)),
+		Branch: strings.TrimSpace(string(branch)),
+	}, nil
+}

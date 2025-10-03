@@ -7,7 +7,11 @@ import (
 	"github.com/zshuzh/wt/internal/git"
 )
 
-type worktreesMsg []git.Worktree
+type worktreesMsg struct {
+	worktrees        []git.Worktree
+	currentWorktree  git.Worktree
+}
+
 type errMsg error
 
 func getWorktrees() tea.Msg {
@@ -15,13 +19,23 @@ func getWorktrees() tea.Msg {
 	if err != nil {
 		return errMsg(err)
 	}
-	return worktreesMsg(worktrees)
+
+	currentWorktree, err := git.GetCurrentWorktree()
+	if err != nil {
+		currentWorktree = git.Worktree{} // Not in a worktree or error
+	}
+
+	return worktreesMsg{
+		worktrees:        worktrees,
+		currentWorktree:  currentWorktree,
+	}
 }
 
 type model struct {
-	worktrees []git.Worktree
-	loading   bool
-	err       error
+	worktrees        []git.Worktree
+	currentWorktree  git.Worktree
+	loading          bool
+	err              error
 }
 
 func (m model) Init() tea.Cmd {
@@ -31,7 +45,8 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case worktreesMsg:
-		m.worktrees = msg
+		m.worktrees = msg.worktrees
+		m.currentWorktree = msg.currentWorktree
 		m.loading = false
 		return m, tea.Quit
 
@@ -66,7 +81,11 @@ func (m model) View() string {
 	s := "Git Worktrees:\n\n"
 
 	for _, wt := range m.worktrees {
-		s += fmt.Sprintf("%s - %s\n", wt.Path, wt.Branch)
+		cursor := " "
+		if wt.Path == m.currentWorktree.Path {
+			cursor = ">"
+		}
+		s += fmt.Sprintf("%s %s - %s\n", cursor, wt.Path, wt.Branch)
 	}
 
 	return s

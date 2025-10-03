@@ -45,7 +45,14 @@ func ListWorktrees() ([]Worktree, error) {
 }
 
 func AddWorktree(wt Worktree) error {
-	return exec.Command("git", "worktree", "add", wt.Path, wt.Branch).Run()
+	err := exec.Command("git", "rev-parse", "--verify", wt.Branch).Run()
+	branchExists := err == nil
+
+	if branchExists {
+		return exec.Command("git", "worktree", "add", wt.Path, wt.Branch).Run()
+	} else {
+		return exec.Command("git", "worktree", "add", "-b", wt.Branch, wt.Path).Run()
+	}
 }
 
 func RemoveWorktree(path string) error {

@@ -1,6 +1,9 @@
 package switchcmd
 
 import (
+	"fmt"
+	"os"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -11,6 +14,18 @@ func (o Options) Run() error {
 		loading: true,
 	}
 
-	_, err := tea.NewProgram(m).Run()
-	return err
+	p := tea.NewProgram(m, tea.WithOutput(os.Stderr))
+	finalModel, err := p.Run()
+	if err != nil {
+		return err
+	}
+
+	finalState := finalModel.(model)
+
+	// print worktree path which is then captured by shell function
+	if len(finalState.worktrees) > 0 && finalState.err == nil {
+		fmt.Println(finalState.worktrees[finalState.cursor].Path)
+	}
+
+	return nil
 }

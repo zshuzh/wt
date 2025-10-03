@@ -12,7 +12,7 @@ type errMsg error
 type successMsg struct{}
 
 func getWorktrees() tea.Msg {
-	worktrees, err := git.GetWorktrees()
+	worktrees, err := git.ListWorktrees()
 	if err != nil {
 		return errMsg(err)
 	}

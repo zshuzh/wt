@@ -11,7 +11,7 @@ type worktreesMsg []git.Worktree
 type errMsg error
 
 func getWorktrees() tea.Msg {
-	worktrees, err := git.GetWorktrees()
+	worktrees, err := git.ListWorktrees()
 	if err != nil {
 		return errMsg(err)
 	}

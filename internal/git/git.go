@@ -10,7 +10,7 @@ type Worktree struct {
 	Branch string
 }
 
-func GetWorktrees() ([]Worktree, error) {
+func ListWorktrees() ([]Worktree, error) {
 	output, err := exec.Command("git", "worktree", "list", "--porcelain").Output()
 	if err != nil {
 		return nil, err

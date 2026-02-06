@@ -85,14 +85,14 @@ func (m model) View() string {
 	}
 
 	if m.err != nil {
-		return fmt.Sprintf("Error: %v\n\nPress q to quit.\n", m.err)
+		return fmt.Sprintf("Error: %v\n", m.err)
 	}
 
 	if len(m.worktrees) == 0 {
-		return "No worktrees found.\n\nPress q to quit.\n"
+		return "No worktrees found.\n"
 	}
 
-	s := "Select a worktree to remove:\n\n"
+	var s string
 
 	for i, wt := range m.worktrees {
 		cursor := " "
@@ -102,8 +102,6 @@ func (m model) View() string {
 
 		s += fmt.Sprintf("%s %s - %s\n", cursor, wt.Path, wt.Branch)
 	}
-
-	s += "\nPress enter to remove, q to quit.\n"
 
 	return s
 }

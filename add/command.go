@@ -101,7 +101,7 @@ func (o Options) Run() error {
 	}
 
 	// Use selected branch if available, otherwise use typed branch name
-	branch := selectedBranch
+	branch = selectedBranch
 	if branch == "" {
 		branch = branchName
 	}

@@ -24,21 +24,20 @@ func (o Options) Run() error {
 
 	homeDir, _ := os.UserHomeDir()
 
-	currentDotStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#EE6FF8"))
-
 	currentPathStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#EE6FF8")).
-		Bold(true)
+		Foreground(lipgloss.Color("212"))
 
 	currentBranchStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#EE6FF8"))
+		Foreground(lipgloss.Color("243"))
+
+	dotStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("243"))
 
 	pathStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7D7D7D"))
+		Foreground(lipgloss.Color("250"))
 
 	branchStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7D7D7D"))
+		Foreground(lipgloss.Color("243"))
 
 	// Find max path length for alignment
 	maxPathLen := 0
@@ -62,17 +61,16 @@ func (o Options) Run() error {
 		// Pad the display path manually before styling to preserve alignment
 		paddedPath := fmt.Sprintf("%-*s", maxPathLen, displayPath)
 
-		prefix := "  "
+		dot := dotStyle.Render("·")
 		if wt.Path == current.Path {
-			prefix = currentDotStyle.Render("● ")
-			fmt.Printf("%s%s  %s\n",
-				prefix,
+			fmt.Printf("  %s %s %s\n",
 				currentPathStyle.Render(paddedPath),
+				dot,
 				currentBranchStyle.Render(wt.Branch))
 		} else {
-			fmt.Printf("%s%s  %s\n",
-				prefix,
+			fmt.Printf("  %s %s %s\n",
 				pathStyle.Render(paddedPath),
+				dot,
 				branchStyle.Render(wt.Branch))
 		}
 	}

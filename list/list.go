@@ -4,14 +4,37 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/zshuzh/wt/internal/git"
 )
 
-type worktreesMsg struct {
-	worktrees        []git.Worktree
-	currentWorktree  git.Worktree
-}
+var (
+	pathStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("250"))
 
+	branchStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("243"))
+
+	separatorStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("243"))
+
+	cursorStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("212"))
+
+	selectedStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("212"))
+
+	helpStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("241"))
+
+	errorStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("196"))
+)
+
+type worktreesMsg struct {
+	worktrees       []git.Worktree
+	currentWorktree git.Worktree
+}
 type errMsg error
 
 func getWorktrees() tea.Msg {
@@ -67,25 +90,31 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	if m.loading {
-		return "Loading worktrees...\n"
+		return helpStyle.Render("Loading worktrees...") + "\n"
 	}
 
 	if m.err != nil {
-		return fmt.Sprintf("Error: %v\n\nPress q to quit.\n", m.err)
+		return errorStyle.Render(fmt.Sprintf("Error: %v", m.err)) + "\n"
 	}
 
 	if len(m.worktrees) == 0 {
-		return "No worktrees found.\n"
+		return helpStyle.Render("No worktrees found.") + "\n"
 	}
 
-	s := "Git Worktrees:\n\n"
+	var s string
 
 	for _, wt := range m.worktrees {
-		cursor := " "
+		sep := separatorStyle.Render("·")
 		if wt.Path == m.currentWorktree.Path {
-			cursor = ">"
+			cursor := cursorStyle.Render(">")
+			path := selectedStyle.Render(wt.Path)
+			branch := branchStyle.Render(wt.Branch)
+			s += fmt.Sprintf("%s %s %s %s\n", cursor, path, sep, branch)
+		} else {
+			path := pathStyle.Render(wt.Path)
+			branch := branchStyle.Render(wt.Branch)
+			s += fmt.Sprintf("  %s %s %s\n", path, sep, branch)
 		}
-		s += fmt.Sprintf("%s %s - %s\n", cursor, wt.Path, wt.Branch)
 	}
 
 	return s

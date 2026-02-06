@@ -2,16 +2,41 @@ package switchcmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/zshuzh/wt/internal/git"
+)
+
+var renderer = lipgloss.NewRenderer(os.Stderr)
+
+var (
+	selectedStyle = renderer.NewStyle().
+			Foreground(lipgloss.Color("212"))
+
+	normalStyle = renderer.NewStyle().
+			Foreground(lipgloss.Color("250"))
+
+	cursorStyle = renderer.NewStyle().
+			Foreground(lipgloss.Color("212"))
+
+	branchStyle = renderer.NewStyle().
+			Foreground(lipgloss.Color("243"))
+
+	helpStyle = renderer.NewStyle().
+			Foreground(lipgloss.Color("241")).
+			MarginTop(1)
+
+	errorStyle = renderer.NewStyle().
+			Foreground(lipgloss.Color("196"))
 )
 
 type worktreesMsg struct {
 	worktrees       []git.Worktree
 	currentWorktree git.Worktree
 }
-
 type errMsg error
 
 func getWorktrees() tea.Msg {
@@ -87,29 +112,38 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	if m.loading {
-		return "Loading worktrees...\n"
+		return helpStyle.Render("Loading worktrees...") + "\n"
 	}
 
 	if m.err != nil {
-		return fmt.Sprintf("Error: %v\n\nPress q to quit.\n", m.err)
+		return errorStyle.Render(fmt.Sprintf("Error: %v", m.err)) + "\n"
 	}
 
 	if len(m.worktrees) == 0 {
-		return "No worktrees found.\n\nPress q to quit.\n"
+		return helpStyle.Render("No worktrees found.") + "\n"
 	}
 
-	s := "Select a worktree:\n\n"
+	homeDir, _ := os.UserHomeDir()
+
+	var s string
 
 	for i, wt := range m.worktrees {
-		cursor := " "
-		if m.cursor == i {
-			cursor = ">"
+		displayPath := wt.Path
+		if homeDir != "" && strings.HasPrefix(displayPath, homeDir) {
+			displayPath = "~" + strings.TrimPrefix(displayPath, homeDir)
 		}
 
-		s += fmt.Sprintf("%s %s - %s\n", cursor, wt.Path, wt.Branch)
+		if m.cursor == i {
+			cursor := cursorStyle.Render(">")
+			path := selectedStyle.Render(displayPath)
+			branch := branchStyle.Render(wt.Branch)
+			s += fmt.Sprintf("%s %s %s %s\n", cursor, path, branchStyle.Render("·"), branch)
+		} else {
+			path := normalStyle.Render(displayPath)
+			branch := branchStyle.Render(wt.Branch)
+			s += fmt.Sprintf("  %s %s %s\n", path, branchStyle.Render("·"), branch)
+		}
 	}
-
-	s += "\nPress enter to select, q to quit.\n"
 
 	return s
 }

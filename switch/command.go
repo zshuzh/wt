@@ -5,13 +5,14 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/zshuzh/wt/internal/tui"
 )
 
 type Options struct{}
 
 func (o Options) Run() error {
 	m := model{
-		loading: true,
+		Model: tui.Model{Loading: true},
 	}
 
 	p := tea.NewProgram(m, tea.WithOutput(os.Stderr))
@@ -23,8 +24,8 @@ func (o Options) Run() error {
 	finalState := finalModel.(model)
 
 	// print worktree path which is then captured by shell function
-	if finalState.selected {
-		fmt.Println(finalState.worktrees[finalState.cursor].Path)
+	if finalState.Selected {
+		fmt.Println(finalState.Worktrees[finalState.Cursor].Path)
 	}
 
 	return nil

@@ -72,6 +72,10 @@ func ListWorktrees() ([]Worktree, error) {
 		}
 	}
 
+	if currentPath != "" {
+		worktrees = append(worktrees, Worktree{Path: currentPath, Branch: currentBranch})
+	}
+
 	return worktrees, nil
 }
 

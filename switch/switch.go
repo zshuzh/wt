@@ -61,6 +61,7 @@ type model struct {
 	cursor    int
 	loading   bool
 	err       error
+	selected  bool
 }
 
 func (m model) Init() tea.Cmd {
@@ -103,6 +104,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "enter":
+			m.selected = true
 			return m, tea.Quit
 		}
 	}

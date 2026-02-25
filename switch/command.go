@@ -23,7 +23,7 @@ func (o Options) Run() error {
 	finalState := finalModel.(model)
 
 	// print worktree path which is then captured by shell function
-	if len(finalState.worktrees) > 0 && finalState.err == nil {
+	if finalState.selected {
 		fmt.Println(finalState.worktrees[finalState.cursor].Path)
 	}
 

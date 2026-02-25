@@ -1,9 +1,40 @@
 package git
 
 import (
+	"bytes"
+	"fmt"
 	"os/exec"
 	"strings"
 )
+
+func runGit(args ...string) error {
+	cmd := exec.Command("git", args...)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		msg := strings.TrimSpace(stderr.String())
+		if msg != "" {
+			return fmt.Errorf("%s", msg)
+		}
+		return err
+	}
+	return nil
+}
+
+func runGitOutput(args ...string) (string, error) {
+	cmd := exec.Command("git", args...)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	out, err := cmd.Output()
+	if err != nil {
+		msg := strings.TrimSpace(stderr.String())
+		if msg != "" {
+			return "", fmt.Errorf("%s", msg)
+		}
+		return "", err
+	}
+	return string(out), nil
+}
 
 type Worktree struct {
 	Path   string
@@ -11,7 +42,7 @@ type Worktree struct {
 }
 
 func ListWorktrees() ([]Worktree, error) {
-	output, err := exec.Command("git", "worktree", "list", "--porcelain").Output()
+	output, err := runGitOutput("worktree", "list", "--porcelain")
 	if err != nil {
 		return nil, err
 	}
@@ -20,7 +51,7 @@ func ListWorktrees() ([]Worktree, error) {
 	var currentPath string
 	var currentBranch string
 
-	for line := range strings.SplitSeq(string(output), "\n") {
+	for line := range strings.SplitSeq(output, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" { // blank line separates worktrees
 			if currentPath != "" {
@@ -45,28 +76,28 @@ func ListWorktrees() ([]Worktree, error) {
 }
 
 func AddWorktree(wt Worktree) error {
-	err := exec.Command("git", "rev-parse", "--verify", wt.Branch).Run()
+	err := runGit("rev-parse", "--verify", wt.Branch)
 	branchExists := err == nil
 
 	if branchExists {
-		return exec.Command("git", "worktree", "add", wt.Path, wt.Branch).Run()
+		return runGit("worktree", "add", wt.Path, wt.Branch)
 	} else {
-		return exec.Command("git", "worktree", "add", "-b", wt.Branch, wt.Path).Run()
+		return runGit("worktree", "add", "-b", wt.Branch, wt.Path)
 	}
 }
 
 func RemoveWorktree(path string) error {
-	return exec.Command("git", "worktree", "remove", path).Run()
+	return runGit("worktree", "remove", path)
 }
 
 func GetBranches() ([]string, error) {
-	output, err := exec.Command("git", "branch", "--format=%(refname:short)").Output()
+	output, err := runGitOutput("branch", "--format=%(refname:short)")
 	if err != nil {
 		return nil, err
 	}
 
 	var branches []string
-	for line := range strings.SplitSeq(strings.TrimSpace(string(output)), "\n") {
+	for line := range strings.SplitSeq(strings.TrimSpace(output), "\n") {
 		line = strings.TrimSpace(line)
 
 		if strings.HasPrefix(line, "graphite-base/") {
@@ -80,13 +111,13 @@ func GetBranches() ([]string, error) {
 }
 
 func GetRepoRoot() (string, error) {
-	output, err := exec.Command("git", "worktree", "list", "--porcelain").Output()
+	output, err := runGitOutput("worktree", "list", "--porcelain")
 	if err != nil {
 		return "", err
 	}
 
 	// first worktree in the list is the main worktree
-	for line := range strings.SplitSeq(string(output), "\n") {
+	for line := range strings.SplitSeq(output, "\n") {
 		if path, ok := strings.CutPrefix(line, "worktree "); ok {
 			return path, nil
 		}
@@ -96,18 +127,18 @@ func GetRepoRoot() (string, error) {
 }
 
 func GetCurrentWorktree() (Worktree, error) {
-	path, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
+	path, err := runGitOutput("rev-parse", "--show-toplevel")
 	if err != nil {
 		return Worktree{}, err
 	}
 
-	branch, err := exec.Command("git", "branch", "--show-current").Output()
+	branch, err := runGitOutput("branch", "--show-current")
 	if err != nil {
 		return Worktree{}, err
 	}
 
 	return Worktree{
-		Path:   strings.TrimSpace(string(path)),
-		Branch: strings.TrimSpace(string(branch)),
+		Path:   strings.TrimSpace(path),
+		Branch: strings.TrimSpace(branch),
 	}, nil
 }

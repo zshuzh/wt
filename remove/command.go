@@ -1,6 +1,8 @@
 package remove
 
 import (
+	"os"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -11,6 +13,6 @@ func (o Options) Run() error {
 		loading: true,
 	}
 
-	_, err := tea.NewProgram(m).Run()
+	_, err := tea.NewProgram(m, tea.WithOutput(os.Stderr)).Run()
 	return err
 }

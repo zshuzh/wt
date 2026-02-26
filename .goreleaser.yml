@@ -30,7 +30,7 @@ homebrew_casks:
           end
     caveats: |
       To enable shell integration, add to your ~/.zshrc:
-        eval "$(wt init zsh)"
+        eval \"$(wt init zsh)\"
     repository:
       owner: zshuzh
       name: homebrew-tap

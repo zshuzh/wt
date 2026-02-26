@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/zshuzh/wt/add"
 	"github.com/zshuzh/wt/checkout"
 	initcmd "github.com/zshuzh/wt/init"
@@ -21,6 +22,12 @@ type Wt struct {
 	Add      add.Options       `cmd:"" help:"Add a new worktree with a new branch"`
 	Checkout checkout.Options  `cmd:"" help:"Add a new worktree for an existing branch"`
 	Remove   remove.Options    `cmd:"" help:"Remove an existing worktree"`
+}
+
+func init() {
+	// Use stderr for color detection so that colors work when stdout is
+	// captured by the shell wrapper (e.g. dir=$(command wt add)).
+	lipgloss.SetDefaultRenderer(lipgloss.NewRenderer(os.Stderr))
 }
 
 func main() {

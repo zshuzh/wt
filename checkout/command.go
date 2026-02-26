@@ -1,7 +1,7 @@
 package checkout
 
 import (
-	"os"
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/huh"
@@ -32,11 +32,11 @@ func filterBranches(query string, branches []string) []huh.Option[string] {
 }
 
 func (o Options) Run() error {
-	cwd, err := os.Getwd()
+	root, err := git.GetRepoRoot()
 	if err != nil {
 		return err
 	}
-	path := cwd + "-"
+	path := root + "-"
 
 	branches, err := git.GetBranches()
 	if err != nil {
@@ -71,8 +71,13 @@ func (o Options) Run() error {
 		return err
 	}
 
-	return git.AddWorktree(git.Worktree{
+	if err := git.AddWorktree(git.Worktree{
 		Path:   path,
 		Branch: selectedBranch,
-	})
+	}); err != nil {
+		return err
+	}
+
+	fmt.Println(path)
+	return nil
 }

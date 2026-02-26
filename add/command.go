@@ -1,7 +1,7 @@
 package add
 
 import (
-	"os"
+	"fmt"
 
 	"github.com/charmbracelet/huh"
 	"github.com/zshuzh/wt/internal/git"
@@ -10,11 +10,11 @@ import (
 type Options struct{}
 
 func (o Options) Run() error {
-	cwd, err := os.Getwd()
+	root, err := git.GetRepoRoot()
 	if err != nil {
 		return err
 	}
-	path := cwd + "-"
+	path := root + "-"
 
 	var branchName string
 
@@ -36,8 +36,13 @@ func (o Options) Run() error {
 		return err
 	}
 
-	return git.AddWorktree(git.Worktree{
+	if err := git.AddWorktree(git.Worktree{
 		Path:   path,
 		Branch: branchName,
-	})
+	}); err != nil {
+		return err
+	}
+
+	fmt.Println(path)
+	return nil
 }

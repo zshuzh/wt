@@ -12,14 +12,17 @@ type Options struct {
 func (o Options) Run() error {
 	shellFunction := `
 wt() {
-  if [ "$1" = "switch" ]; then
-    local dir=$(command wt switch)
-    if [ -n "$dir" ]; then
-      cd "$dir"
-    fi
-  else
-    command wt "$@"
-  fi
+  case "$1" in
+    switch|add|checkout)
+      local dir=$(command wt "$@")
+      if [ -n "$dir" ]; then
+        cd "$dir"
+      fi
+      ;;
+    *)
+      command wt "$@"
+      ;;
+  esac
 }
 `
 

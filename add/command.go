@@ -1,14 +1,10 @@
 package add
 
 import (
-	"fmt"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/huh"
-	"github.com/zshuzh/wt/internal/config"
 	"github.com/zshuzh/wt/internal/git"
 )
 
@@ -37,23 +33,9 @@ func filterBranches(query string, branches []string) []huh.Option[string] {
 }
 
 func (o Options) Run() error {
-	cfg, err := config.Load()
+	path, err := os.Getwd()
 	if err != nil {
 		return err
-	}
-
-	root, err := git.GetRepoRoot()
-	if err != nil {
-		return err
-	}
-
-	var path string
-	var branch string
-
-	if cfg.PathDefault != "" {
-		path = filepath.Join(root, cfg.PathDefault)
-	} else {
-		path = root
 	}
 
 	branches, err := git.GetBranches()
@@ -101,48 +83,13 @@ func (o Options) Run() error {
 	}
 
 	// Use selected branch if available, otherwise use typed branch name
-	branch = selectedBranch
+	branch := selectedBranch
 	if branch == "" {
 		branch = branchName
 	}
 
-	err = git.AddWorktree(git.Worktree{
+	return git.AddWorktree(git.Worktree{
 		Path:   path,
 		Branch: branch,
 	})
-	if err != nil {
-		return err
-	}
-
-	for _, hook := range cfg.Hooks {
-		if hook.Root != root {
-			continue
-		}
-
-		workDir := filepath.Join(path, hook.Subdir)
-
-		shell := os.Getenv("SHELL")
-		if shell == "" {
-			shell = "/bin/sh"
-		}
-
-		// The -l flag sources login files (e.g. ~/.zshrc) to set up a full environment. This also
-		// allows wt to set env variables that hooks can use (e.g. $GIT_REPO_ROOT).
-		cmd := exec.Command(shell, "-l", "-c", hook.Command)
-		cmd.Dir = workDir
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Stdin = os.Stdin
-		cmd.Env = append(os.Environ(),
-			"WT_WORKTREE_PATH="+path,
-			"WT_WORKTREE_BRANCH="+branch,
-			"WT_REPO_ROOT="+root,
-		)		
-
-		if err := cmd.Run(); err != nil {
-			fmt.Printf("Hook failed: %v\n", err)
-		}
-	}
-
-	return nil
 }

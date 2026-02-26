@@ -13,6 +13,12 @@ func (o Options) Run() error {
 	shellFunction := `
 wt() {
   case "$1" in
+    ai)
+      local dir=$(command wt add)
+      if [ -n "$dir" ]; then
+        cd "$dir" && claude
+      fi
+      ;;
     switch|add|checkout)
       local dir=$(command wt "$@")
       if [ -n "$dir" ]; then

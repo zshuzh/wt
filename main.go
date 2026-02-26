@@ -18,12 +18,12 @@ import (
 type Wt struct {
 	Version  kong.VersionFlag   `short:"v" help:"Print version information"`
 	Init     initcmd.Options   `cmd:"" help:"Print shell integration code"`
-	List     list.Options      `cmd:"" help:"List current worktrees"`
-	Switch   switchcmd.Options `cmd:"" help:"Switch to a worktree"`
-	Add      add.Options       `cmd:"" help:"Add a new worktree with a new branch"`
-	Checkout checkout.Options  `cmd:"" help:"Add a new worktree for an existing branch"`
-	Remove   remove.Options    `cmd:"" help:"Remove an existing worktree"`
-	Nuke     nuke.Options      `cmd:"" help:"Remove a worktree and delete its branch"`
+	List     list.Options      `cmd:"" aliases:"l" help:"List current worktrees"`
+	Switch   switchcmd.Options `cmd:"" aliases:"s" help:"Switch to a worktree"`
+	Add      add.Options       `cmd:"" aliases:"a" help:"Add a new worktree with a new branch"`
+	Checkout checkout.Options  `cmd:"" aliases:"co" help:"Add a new worktree for an existing branch"`
+	Remove   remove.Options    `cmd:"" aliases:"rm" help:"Remove an existing worktree"`
+	Nuke     nuke.Options      `cmd:"" aliases:"n" help:"Remove a worktree and delete its branch"`
 }
 
 func init() {

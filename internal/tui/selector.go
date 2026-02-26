@@ -130,21 +130,32 @@ func (m Model) View() string {
 
 	homeDir, _ := os.UserHomeDir()
 
+	// Compute display paths and max length for alignment
+	displayPaths := make([]string, len(m.Worktrees))
+	maxPathLen := 0
+	for i, wt := range m.Worktrees {
+		p := wt.Path
+		if homeDir != "" && strings.HasPrefix(p, homeDir) {
+			p = "~" + strings.TrimPrefix(p, homeDir)
+		}
+		displayPaths[i] = p
+		if len(p) > maxPathLen {
+			maxPathLen = len(p)
+		}
+	}
+
 	var s string
 
 	for i, wt := range m.Worktrees {
-		displayPath := wt.Path
-		if homeDir != "" && strings.HasPrefix(displayPath, homeDir) {
-			displayPath = "~" + strings.TrimPrefix(displayPath, homeDir)
-		}
+		paddedPath := fmt.Sprintf("%-*s", maxPathLen, displayPaths[i])
 
 		if m.Cursor == i {
 			cursor := CursorStyle.Render(">")
-			path := SelectedStyle.Render(displayPath)
+			path := SelectedStyle.Render(paddedPath)
 			branch := BranchStyle.Render(wt.Branch)
 			s += fmt.Sprintf("%s %s %s %s\n", cursor, path, BranchStyle.Render("·"), branch)
 		} else {
-			path := NormalStyle.Render(displayPath)
+			path := NormalStyle.Render(paddedPath)
 			branch := BranchStyle.Render(wt.Branch)
 			s += fmt.Sprintf("  %s %s %s\n", path, BranchStyle.Render("·"), branch)
 		}

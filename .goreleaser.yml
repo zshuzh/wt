@@ -22,6 +22,15 @@ homebrew_casks:
       - wt
     homepage: https://github.com/zshuzh/wt
     description: Git worktree manager optimized for AI workflows
+    hooks:
+      post:
+        install: |
+          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}"]
+          end
+    caveats: |
+      To enable shell integration, add to your ~/.zshrc:
+        eval "$(wt init zsh)"
     repository:
       owner: zshuzh
       name: homebrew-tap

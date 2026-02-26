@@ -22,6 +22,20 @@ func runGit(args ...string) error {
 	return nil
 }
 
+func runGraphite(args ...string) error {
+	cmd := exec.Command("gt", args...)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		msg := strings.TrimSpace(stderr.String())
+		if msg != "" {
+			return fmt.Errorf("%s", msg)
+		}
+		return err
+	}
+	return nil
+}
+
 func runGitOutput(args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
 	var stderr bytes.Buffer
@@ -96,6 +110,9 @@ func RemoveWorktree(path string) error {
 }
 
 func DeleteBranch(branch string) error {
+	if IsGraphiteRepo() {
+		return runGraphite("delete", branch, "--force")
+	}
 	return runGit("branch", "-D", branch)
 }
 
@@ -145,18 +162,7 @@ func IsGraphiteRepo() bool {
 }
 
 func TrackWithGraphite(cwd, parent string) error {
-	cmd := exec.Command("gt", "branch", "track", "--parent", parent)
-	cmd.Dir = cwd
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	if err := cmd.Run(); err != nil {
-		msg := strings.TrimSpace(stderr.String())
-		if msg != "" {
-			return fmt.Errorf("%s", msg)
-		}
-		return err
-	}
-	return nil
+	return runGraphite("--cwd", cwd, "track", "--parent", parent)
 }
 
 func GetCurrentWorktree() (Worktree, error) {

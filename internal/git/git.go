@@ -94,6 +94,10 @@ func RemoveWorktree(path string) error {
 	return runGit("worktree", "remove", path)
 }
 
+func DeleteBranch(branch string) error {
+	return runGit("branch", "-D", branch)
+}
+
 func GetBranches() ([]string, error) {
 	output, err := runGitOutput("branch", "--format=%(refname:short)")
 	if err != nil {

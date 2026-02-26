@@ -10,6 +10,7 @@ import (
 	"github.com/zshuzh/wt/checkout"
 	initcmd "github.com/zshuzh/wt/init"
 	"github.com/zshuzh/wt/list"
+	"github.com/zshuzh/wt/nuke"
 	"github.com/zshuzh/wt/remove"
 	switchcmd "github.com/zshuzh/wt/switch"
 )
@@ -22,6 +23,7 @@ type Wt struct {
 	Add      add.Options       `cmd:"" help:"Add a new worktree with a new branch"`
 	Checkout checkout.Options  `cmd:"" help:"Add a new worktree for an existing branch"`
 	Remove   remove.Options    `cmd:"" help:"Remove an existing worktree"`
+	Nuke     nuke.Options      `cmd:"" help:"Remove a worktree and delete its branch"`
 }
 
 func init() {

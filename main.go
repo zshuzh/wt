@@ -6,6 +6,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/zshuzh/wt/add"
+	"github.com/zshuzh/wt/checkout"
 	initcmd "github.com/zshuzh/wt/init"
 	"github.com/zshuzh/wt/list"
 	"github.com/zshuzh/wt/remove"
@@ -13,12 +14,13 @@ import (
 )
 
 type Wt struct {
-	Version kong.VersionFlag   `short:"v" help:"Print version information"`
-	Init    initcmd.Options   `cmd:"" help:"Print shell integration code"`
-	List    list.Options      `cmd:"" help:"List current worktrees"`
-	Switch  switchcmd.Options `cmd:"" help:"Switch to a worktree"`
-	Add     add.Options       `cmd:"" help:"Add a new worktree"`
-	Remove  remove.Options    `cmd:"" help:"Remove an existing worktree"`
+	Version  kong.VersionFlag   `short:"v" help:"Print version information"`
+	Init     initcmd.Options   `cmd:"" help:"Print shell integration code"`
+	List     list.Options      `cmd:"" help:"List current worktrees"`
+	Switch   switchcmd.Options `cmd:"" help:"Switch to a worktree"`
+	Add      add.Options       `cmd:"" help:"Add a new worktree with a new branch"`
+	Checkout checkout.Options  `cmd:"" help:"Add a new worktree for an existing branch"`
+	Remove   remove.Options    `cmd:"" help:"Remove an existing worktree"`
 }
 
 func main() {

@@ -3,6 +3,7 @@ package git
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -132,6 +133,30 @@ func GetRepoRoot() (string, error) {
 	}
 
 	return "", nil
+}
+
+func IsGraphiteRepo() bool {
+	root, err := GetRepoRoot()
+	if err != nil {
+		return false
+	}
+	_, err = os.Stat(root + "/.git/.graphite_repo_config")
+	return err == nil
+}
+
+func TrackWithGraphite(cwd, parent string) error {
+	cmd := exec.Command("gt", "branch", "track", "--parent", parent)
+	cmd.Dir = cwd
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		msg := strings.TrimSpace(stderr.String())
+		if msg != "" {
+			return fmt.Errorf("%s", msg)
+		}
+		return err
+	}
+	return nil
 }
 
 func GetCurrentWorktree() (Worktree, error) {

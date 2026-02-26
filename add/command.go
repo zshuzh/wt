@@ -36,11 +36,22 @@ func (o Options) Run() error {
 		return err
 	}
 
+	currentWorktree, err := git.GetCurrentWorktree()
+	if err != nil {
+		return err
+	}
+
 	if err := git.AddWorktree(git.Worktree{
 		Path:   path,
 		Branch: branchName,
 	}); err != nil {
 		return err
+	}
+
+	if git.IsGraphiteRepo() {
+		if err := git.TrackWithGraphite(path, currentWorktree.Branch); err != nil {
+			return err
+		}
 	}
 
 	fmt.Println(path)

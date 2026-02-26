@@ -15,6 +15,8 @@ import (
 	switchcmd "github.com/zshuzh/wt/switch"
 )
 
+var version = "dev"
+
 type Wt struct {
 	Version  kong.VersionFlag   `short:"v" help:"Print version information"`
 	Init     initcmd.Options   `cmd:"" help:"Print shell integration code"`
@@ -38,7 +40,7 @@ func main() {
 		kong.Name("wt"),
 		kong.Description("Git worktree manager optimized for AI workflows"),
 		kong.UsageOnError(),
-		kong.Vars{"version": "0.1.0"},
+		kong.Vars{"version": version},
 	)
 
 	err := ctx.Run()

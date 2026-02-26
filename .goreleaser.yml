@@ -1,0 +1,28 @@
+version: 2
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+archives:
+  - formats:
+      - tar.gz
+
+homebrew_casks:
+  - name: wt
+    binaries:
+      - wt
+    homepage: https://github.com/zshuzh/wt
+    description: Git worktree manager optimized for AI workflows
+    repository:
+      owner: zshuzh
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"

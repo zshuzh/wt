@@ -192,6 +192,14 @@ func IsGraphiteRepo() bool {
 	return err == nil
 }
 
+func RunGraphiteInteractive(args ...string) error {
+	cmd := exec.Command("gt", args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stderr // TUI output goes to stderr so stdout stays clean for path capture
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
 func TrackWithGraphite(cwd, parent string) error {
 	return runGraphite("--cwd", cwd, "track", "--parent", parent)
 }

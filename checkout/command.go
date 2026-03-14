@@ -71,10 +71,7 @@ func (o Options) Run() error {
 		return err
 	}
 
-	if err := git.AddWorktree(git.Worktree{
-		Path:   path,
-		Branch: selectedBranch,
-	}); err != nil {
+	if err := git.AddWorktree(path, selectedBranch); err != nil {
 		return err
 	}
 

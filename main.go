@@ -12,6 +12,7 @@ import (
 	"github.com/zshuzh/wt/list"
 	"github.com/zshuzh/wt/nuke"
 	"github.com/zshuzh/wt/remove"
+	"github.com/zshuzh/wt/review"
 	switchcmd "github.com/zshuzh/wt/switch"
 )
 
@@ -26,6 +27,7 @@ type Wt struct {
 	Checkout checkout.Options  `cmd:"" aliases:"co" help:"Add a new worktree for an existing branch"`
 	Remove   remove.Options    `cmd:"" aliases:"rm" help:"Remove an existing worktree"`
 	Nuke     nuke.Options      `cmd:"" aliases:"n" help:"Remove a worktree and delete its branch"`
+	Review   review.Options    `cmd:"" aliases:"r" help:"Review a PR in a new worktree"`
 }
 
 func init() {

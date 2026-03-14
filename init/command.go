@@ -19,7 +19,7 @@ wt() {
         cd "$dir" && claude
       fi
       ;;
-    switch|s|add|a|checkout|co) # keep in sync with aliases in main.go
+    switch|s|add|a|checkout|co|review|r) # keep in sync with aliases in main.go
       local dir=$(command wt "$@")
       if [ -n "$dir" ]; then
         cd "$dir"

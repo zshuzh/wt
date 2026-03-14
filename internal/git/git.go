@@ -94,15 +94,18 @@ func ListWorktrees() ([]Worktree, error) {
 	return worktrees, nil
 }
 
-func AddWorktree(wt Worktree) error {
-	err := runGit("rev-parse", "--verify", wt.Branch)
+func AddWorktree(path, branch string, ref ...string) error {
+	err := runGit("rev-parse", "--verify", branch)
 	branchExists := err == nil
 
 	if branchExists {
-		return runGit("worktree", "add", wt.Path, wt.Branch)
-	} else {
-		return runGit("worktree", "add", "-b", wt.Branch, wt.Path)
+		return runGit("worktree", "add", path, branch)
 	}
+	startPoint := "HEAD"
+	if len(ref) > 0 && ref[0] != "" {
+		startPoint = ref[0]
+	}
+	return runGit("worktree", "add", "-b", branch, path, startPoint)
 }
 
 func RemoveWorktree(path string) error {
@@ -111,7 +114,9 @@ func RemoveWorktree(path string) error {
 
 func DeleteBranch(branch string) error {
 	if IsGraphiteRepo() {
-		return runGraphite("delete", branch, "--force")
+		if err := runGraphite("delete", branch, "--force"); err == nil {
+			return nil
+		}
 	}
 	return runGit("branch", "-D", branch)
 }
@@ -136,6 +141,10 @@ func GetBranches() ([]string, error) {
 	return branches, nil
 }
 
+func FetchBranch(branch string) error {
+	return runGit("fetch", "origin", branch)
+}
+
 func GetRepoRoot() (string, error) {
 	output, err := runGitOutput("worktree", "list", "--porcelain")
 	if err != nil {
@@ -150,6 +159,28 @@ func GetRepoRoot() (string, error) {
 	}
 
 	return "", nil
+}
+
+func GetRepoSlug() (string, error) {
+	output, err := runGitOutput("remote", "get-url", "origin")
+	if err != nil {
+		return "", err
+	}
+
+	url := strings.TrimSpace(output)
+
+	// Handle SSH: git@github.com:owner/repo.git
+	if strings.HasPrefix(url, "git@") {
+		url = strings.TrimPrefix(url, "git@github.com:")
+		url = strings.TrimSuffix(url, ".git")
+		return url, nil
+	}
+
+	// Handle HTTPS: https://github.com/owner/repo.git
+	url = strings.TrimPrefix(url, "https://github.com/")
+	url = strings.TrimPrefix(url, "http://github.com/")
+	url = strings.TrimSuffix(url, ".git")
+	return url, nil
 }
 
 func IsGraphiteRepo() bool {

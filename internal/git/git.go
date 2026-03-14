@@ -108,7 +108,10 @@ func AddWorktree(path, branch string, ref ...string) error {
 	return runGit("worktree", "add", "-b", branch, path, startPoint)
 }
 
-func RemoveWorktree(path string) error {
+func RemoveWorktree(path string, force bool) error {
+	if force {
+		return runGit("worktree", "remove", "--force", path)
+	}
 	return runGit("worktree", "remove", path)
 }
 

@@ -8,9 +8,9 @@ import (
 
 type successMsg struct{}
 
-func removeWorktree(path string) tea.Cmd {
+func removeWorktree(path string, force bool) tea.Cmd {
 	return func() tea.Msg {
-		err := git.RemoveWorktree(path)
+		err := git.RemoveWorktree(path, force)
 		if err != nil {
 			return tui.ErrMsg(err)
 		}
@@ -21,6 +21,7 @@ func removeWorktree(path string) tea.Cmd {
 
 type model struct {
 	tui.Model
+	force bool
 }
 
 func (m model) Init() tea.Cmd {
@@ -34,7 +35,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		if msg.String() == "enter" && len(m.Worktrees) > 0 {
-			return m, removeWorktree(m.Worktrees[m.Cursor].Path)
+			return m, removeWorktree(m.Worktrees[m.Cursor].Path, m.force)
 		}
 	}
 

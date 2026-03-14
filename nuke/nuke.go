@@ -10,7 +10,7 @@ type successMsg struct{}
 
 func nukeWorktree(path, branch string) tea.Cmd {
 	return func() tea.Msg {
-		err := git.RemoveWorktree(path)
+		err := git.RemoveWorktree(path, true)
 		if err != nil {
 			return tui.ErrMsg(err)
 		}

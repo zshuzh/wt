@@ -31,14 +31,9 @@ wt() {
       fi
       ;;
     add|a)
-      local output=$(command wt "$@")
-      local dir=$(echo "$output" | head -n1)
-      local msg=$(echo "$output" | sed -n '2p')
+      local dir=$(command wt "$@")
       if [ -n "$dir" ]; then
         cd "$dir"
-        if [ -n "$msg" ]; then
-          gt c -m "$msg"
-        fi
       fi
       ;;
     switch|s|review|r) # keep in sync with aliases in main.go

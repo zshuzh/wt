@@ -16,11 +16,12 @@ func (o Options) Run() error {
 	path := o.Path
 	message := o.Message
 
+	root, err := git.GetRepoRoot()
+	if err != nil {
+		return err
+	}
+
 	if path == "" {
-		root, err := git.GetRepoRoot()
-		if err != nil {
-			return err
-		}
 		path = root + "-"
 
 		form := huh.NewForm(
@@ -38,6 +39,8 @@ func (o Options) Run() error {
 		if err := form.Run(); err != nil {
 			return err
 		}
+	} else {
+		path = root + "-" + path
 	}
 
 	if message != "" {

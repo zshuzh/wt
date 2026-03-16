@@ -8,7 +8,8 @@ import (
 )
 
 type Options struct {
-	Path string `arg:"" optional:"" help:"Path for the new worktree"`
+	Path    string `arg:"" optional:"" help:"Path for the new worktree"`
+	Message string `arg:"" optional:"" help:"Commit message (creates a branch via gt c -m)"`
 }
 
 func (o Options) Run() error {
@@ -38,5 +39,8 @@ func (o Options) Run() error {
 	}
 
 	fmt.Println(path)
+	if o.Message != "" {
+		fmt.Println(o.Message)
+	}
 	return nil
 }

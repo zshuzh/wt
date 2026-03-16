@@ -108,6 +108,22 @@ func AddWorktree(path, branch string, ref ...string) error {
 	return runGit("worktree", "add", "-b", branch, path, startPoint)
 }
 
+func GetCurrentBranch() (string, error) {
+	output, err := runGitOutput("branch", "--show-current")
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(output), nil
+}
+
+func Checkout(branch string) error {
+	return runGit("checkout", branch)
+}
+
+func GraphiteCreate(message string) error {
+	return runGraphite("c", "-m", message)
+}
+
 func AddWorktreeDetached(path string) error {
 	return runGit("worktree", "add", "--detach", path)
 }

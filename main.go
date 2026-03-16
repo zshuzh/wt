@@ -22,7 +22,7 @@ type Wt struct {
 	Init     initcmd.Options   `cmd:"" help:"Print shell integration code"`
 	List     list.Options      `cmd:"" aliases:"l" help:"List current worktrees"`
 	Switch   switchcmd.Options `cmd:"" aliases:"s" help:"Switch to a worktree"`
-	Add      add.Options       `cmd:"" aliases:"a" help:"Add a new worktree with a new branch"`
+	Add      add.Options       `cmd:"" aliases:"a" help:"Add a new worktree"`
 	Checkout checkout.Options  `cmd:"" aliases:"co" help:"Add a new worktree for an existing branch"`
 	Remove   remove.Options    `cmd:"" aliases:"rm" help:"Remove an existing worktree"`
 	Review   review.Options    `cmd:"" aliases:"r" help:"Review a PR in a new worktree"`

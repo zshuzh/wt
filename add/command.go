@@ -7,48 +7,34 @@ import (
 	"github.com/zshuzh/wt/internal/git"
 )
 
-type Options struct{}
+type Options struct {
+	Path string `arg:"" optional:"" help:"Path for the new worktree"`
+}
 
 func (o Options) Run() error {
 	root, err := git.GetRepoRoot()
 	if err != nil {
 		return err
 	}
-	path := root + "-"
 
-	var branchName string
-
-	form := huh.NewForm(
-		huh.NewGroup(
-			huh.NewInput().
-				Title("Path").
-				Description("Enter the path for the new worktree").
-				Value(&path),
-
-			huh.NewInput().
-				Title("Branch name").
-				Description("Name for the new branch").
-				Value(&branchName),
-		),
-	)
-
-	if err := form.Run(); err != nil {
-		return err
-	}
-
-	currentWorktree, err := git.GetCurrentWorktree()
-	if err != nil {
-		return err
-	}
-
-	if err := git.AddWorktree(path, branchName); err != nil {
-		return err
-	}
-
-	if git.IsGraphiteRepo() {
-		if err := git.TrackWithGraphite(path, currentWorktree.Branch); err != nil {
+	path := o.Path
+	if path == "" {
+		path = root + "-"
+		form := huh.NewForm(
+			huh.NewGroup(
+				huh.NewInput().
+					Title("Path").
+					Description("Enter the path for the new worktree").
+					Value(&path),
+			),
+		)
+		if err := form.Run(); err != nil {
 			return err
 		}
+	}
+
+	if err := git.AddWorktreeDetached(path); err != nil {
+		return err
 	}
 
 	fmt.Println(path)

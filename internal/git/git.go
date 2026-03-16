@@ -199,10 +199,6 @@ func IsGraphiteRepo() bool {
 	return err == nil
 }
 
-func TrackWithGraphite(cwd, parent string) error {
-	return runGraphite("--cwd", cwd, "track", "--parent", parent)
-}
-
 func GetCurrentWorktree() (Worktree, error) {
 	path, err := runGitOutput("rev-parse", "--show-toplevel")
 	if err != nil {

@@ -108,6 +108,10 @@ func AddWorktree(path, branch string, ref ...string) error {
 	return runGit("worktree", "add", "-b", branch, path, startPoint)
 }
 
+func AddWorktreeDetached(path string) error {
+	return runGit("worktree", "add", "--detach", path)
+}
+
 func RemoveWorktree(path string, force bool) error {
 	if force {
 		return runGit("worktree", "remove", "--force", path)
@@ -193,14 +197,6 @@ func IsGraphiteRepo() bool {
 	}
 	_, err = os.Stat(root + "/.git/.graphite_repo_config")
 	return err == nil
-}
-
-func RunGraphiteInteractive(args ...string) error {
-	cmd := exec.Command("gt", args...)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stderr // TUI output goes to stderr so stdout stays clean for path capture
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
 }
 
 func TrackWithGraphite(cwd, parent string) error {

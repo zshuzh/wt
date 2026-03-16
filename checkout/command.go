@@ -2,9 +2,7 @@ package checkout
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/huh"
 	"github.com/zshuzh/wt/internal/git"
@@ -39,20 +37,12 @@ func (o Options) runGraphite() error {
 		return err
 	}
 
-	// Create a temporary branch name based on the worktree directory name
-	dirName := filepath.Base(path)
-	tempBranch := fmt.Sprintf("wt-%s-%d", dirName, time.Now().Unix())
-
-	if err := git.AddWorktree(path, tempBranch); err != nil {
-		return err
-	}
-
-	// Run gt co interactively inside the new worktree
-	if err := git.RunGraphiteInteractive("--cwd", path, "co"); err != nil {
+	if err := git.AddWorktreeDetached(path); err != nil {
 		return err
 	}
 
 	fmt.Println(path)
+	fmt.Println("graphite")
 	return nil
 }
 

@@ -19,7 +19,18 @@ wt() {
         cd "$dir" && claude
       fi
       ;;
-    switch|s|add|a|checkout|co|review|r) # keep in sync with aliases in main.go
+    checkout|co)
+      local output=$(command wt "$@")
+      local dir=$(echo "$output" | head -n1)
+      local mode=$(echo "$output" | sed -n '2p')
+      if [ -n "$dir" ]; then
+        cd "$dir"
+        if [ "$mode" = "graphite" ]; then
+          gt co
+        fi
+      fi
+      ;;
+    switch|s|add|a|review|r) # keep in sync with aliases in main.go
       local dir=$(command wt "$@")
       if [ -n "$dir" ]; then
         cd "$dir"

@@ -161,10 +161,14 @@ func groupIntoStacks(prs []pr) []stack {
 		groups[root] = append(groups[root], prs[i])
 	}
 
-	// Order PRs within each group by their dependency chain (root first).
+	// Order PRs within each group by their dependency chain (tip first).
 	var stacks []stack
 	for _, group := range groups {
 		ordered := orderChain(group, byHead)
+		// Reverse so the tip (newest) is first and the root is last.
+		for i, j := 0, len(ordered)-1; i < j; i, j = i+1, j-1 {
+			ordered[i], ordered[j] = ordered[j], ordered[i]
+		}
 		s := stack{
 			Title: ordered[0].Title,
 			PRs:   ordered,

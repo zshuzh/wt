@@ -165,6 +165,9 @@ func GetBranches() ([]string, error) {
 }
 
 func FetchBranch(branch string) error {
+	if IsGraphiteRepo() {
+		return runGraphite("get", "--no-checkout", branch)
+	}
 	return runGit("fetch", "origin", branch)
 }
 

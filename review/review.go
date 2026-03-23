@@ -60,6 +60,25 @@ var (
 
 	promptStyle = renderer.NewStyle().
 			Foreground(lipgloss.Color("212"))
+
+	stackIconStyle = renderer.NewStyle().
+			Foreground(lipgloss.Color("212"))
+
+	headerStyle = renderer.NewStyle().
+			Foreground(lipgloss.Color("212")).
+			Bold(true)
+
+	positionStyle = renderer.NewStyle().
+			Foreground(lipgloss.Color("243"))
+)
+
+// viewMode represents which screen the user is on.
+type viewMode int
+
+const (
+	viewStacks viewMode = iota // top-level: list of stacks and standalone PRs
+	viewDetail                 // drill-in: PRs within a single stack
+	viewSetup                  // checking out a PR (spinner)
 )
 
 type prsMsg struct {
@@ -79,23 +98,37 @@ func fetchPRsCmd(repo string) tea.Cmd {
 }
 
 type model struct {
-	repo     string
-	root     string
-	prs      []pr
-	filtered []pr
-	cursor   int
+	repo string
+	root string
+
+	// data
+	stacks   []stack
+	filtered []stack // after applying filter
+
+	// navigation
+	mode   viewMode
+	cursor int
+
+	// detail view
+	activeStack *stack
+	detailPRs   []pr
+	detailIdx   int
+
+	// filter
+	filter textinput.Model
+
+	// setup phase
+	setting     bool
+	steps       []step
+	currentStep int
+	done        bool
+	resultPath  string
+
+	// common
 	loading  bool
 	err      error
 	selected bool
-	filter   textinput.Model
 	spinner  spinner.Model
-
-	// setup phase
-	setting    bool
-	steps      []step
-	currentStep int
-	done       bool
-	resultPath string
 }
 
 func newModel(repo, root string) model {
@@ -114,6 +147,7 @@ func newModel(repo, root string) model {
 		repo:    repo,
 		root:    root,
 		loading: true,
+		mode:    viewStacks,
 		filter:  ti,
 		spinner: s,
 	}
@@ -123,18 +157,26 @@ func (m model) Init() tea.Cmd {
 	return tea.Batch(fetchPRsCmd(m.repo), m.spinner.Tick, textinput.Blink)
 }
 
+// applyFilter filters stacks based on the current query.
 func (m *model) applyFilter() {
 	query := strings.ToLower(m.filter.Value())
 	if query == "" {
-		m.filtered = m.prs
+		m.filtered = m.stacks
 		return
 	}
 
 	m.filtered = nil
-	for _, p := range m.prs {
-		searchable := strings.ToLower(fmt.Sprintf("#%d %s %s", p.Number, p.Title, p.Author.Login))
+	for _, s := range m.stacks {
+		// Match against stack title, author, or any PR title/number.
+		searchable := strings.ToLower(s.Title)
+		if len(s.PRs) > 0 {
+			searchable += " " + strings.ToLower(s.PRs[0].Author.Login)
+		}
+		for _, p := range s.PRs {
+			searchable += " " + strings.ToLower(fmt.Sprintf("#%d %s", p.Number, p.Title))
+		}
 		if strings.Contains(searchable, query) {
-			m.filtered = append(m.filtered, p)
+			m.filtered = append(m.filtered, s)
 		}
 	}
 }
@@ -144,6 +186,7 @@ func (m model) startSetup(selected pr) (model, tea.Cmd) {
 	branch := selected.HeadRefName
 
 	m.selected = true
+	m.mode = viewSetup
 	m.setting = true
 	m.resultPath = path
 	m.steps = []step{
@@ -188,11 +231,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	// Selection phase
+	// Handle shared messages
 	switch msg := msg.(type) {
 	case prsMsg:
-		m.prs = msg.prs
-		m.filtered = msg.prs
+		m.stacks = groupIntoStacks(msg.prs)
+		m.filtered = m.stacks
 		m.loading = false
 		return m, nil
 
@@ -208,7 +251,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 		return m, nil
+	}
 
+	// Delegate to the active view
+	switch m.mode {
+	case viewStacks:
+		return m.updateStacks(msg)
+	case viewDetail:
+		return m.updateDetail(msg)
+	}
+
+	return m, nil
+}
+
+// updateStacks handles input for the top-level stack list.
+func (m model) updateStacks(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -228,7 +286,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "enter":
 			if len(m.filtered) > 0 {
-				return m.startSetup(m.filtered[m.cursor])
+				s := m.filtered[m.cursor]
+				if s.IsStack() {
+					// Drill into the stack.
+					m.mode = viewDetail
+					m.activeStack = &s
+					m.detailPRs = s.PRs
+					m.detailIdx = 0
+					return m, nil
+				}
+				// Standalone PR — check it out directly.
+				return m.startSetup(s.PRs[0])
 			}
 			return m, nil
 
@@ -243,7 +311,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	// Pass to text input for filtering
+	// Pass to text input for filtering.
 	var cmd tea.Cmd
 	m.filter, cmd = m.filter.Update(msg)
 	m.applyFilter()
@@ -251,6 +319,45 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.cursor = max(0, len(m.filtered)-1)
 	}
 	return m, cmd
+}
+
+// updateDetail handles input for the stack detail view.
+func (m model) updateDetail(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c":
+			return m, tea.Quit
+
+		case "up", "ctrl+p":
+			if m.detailIdx > 0 {
+				m.detailIdx--
+			}
+			return m, nil
+
+		case "down", "ctrl+n":
+			if m.detailIdx < len(m.detailPRs)-1 {
+				m.detailIdx++
+			}
+			return m, nil
+
+		case "enter":
+			if len(m.detailPRs) > 0 {
+				return m.startSetup(m.detailPRs[m.detailIdx])
+			}
+			return m, nil
+
+		case "esc":
+			// Go back to the stack list.
+			m.mode = viewStacks
+			m.activeStack = nil
+			m.detailPRs = nil
+			m.detailIdx = 0
+			return m, nil
+		}
+	}
+
+	return m, nil
 }
 
 func timeAgo(t time.Time) string {
@@ -295,12 +402,23 @@ func (m model) View() string {
 		return errorStyle.Render(fmt.Sprintf("Error: %v", m.err)) + "\n"
 	}
 
-	if len(m.prs) == 0 {
+	switch m.mode {
+	case viewStacks:
+		return m.viewStacks()
+	case viewDetail:
+		return m.viewDetail()
+	}
+
+	return ""
+}
+
+// viewStacks renders the top-level list of stacks and standalone PRs.
+func (m model) viewStacks() string {
+	if len(m.stacks) == 0 {
 		return helpStyle.Render("No PRs requesting your review.") + "\n"
 	}
 
 	var s string
-
 	s += m.filter.View() + "\n\n"
 
 	if len(m.filtered) == 0 {
@@ -308,8 +426,33 @@ func (m model) View() string {
 		return s
 	}
 
-	for i, p := range m.filtered {
+	for i, st := range m.filtered {
 		isCurrent := m.cursor == i
+
+		if st.IsStack() {
+			s += m.renderStackRow(st, isCurrent)
+		} else {
+			s += m.renderPRRow(st.PRs[0], isCurrent)
+		}
+
+		if i < len(m.filtered)-1 {
+			s += "\n"
+		}
+	}
+
+	s += "\n" + helpStyle.Render("  ↑↓ navigate · enter select · esc quit")
+	return s
+}
+
+// viewDetail renders the PRs within the active stack.
+func (m model) viewDetail() string {
+	var s string
+
+	s += "  " + headerStyle.Render("◀ "+m.activeStack.Title) +
+		dimStyle.Render(fmt.Sprintf("  (%d PRs)", len(m.detailPRs))) + "\n\n"
+
+	for i, p := range m.detailPRs {
+		isCurrent := m.detailIdx == i
 		cursor := "  "
 		if isCurrent {
 			cursor = accentStyle.Render("> ")
@@ -329,11 +472,12 @@ func (m model) View() string {
 			line1 += " " + draftStyle.Render("[draft]")
 		}
 
-		// Line 2: author, diff stats, time, labels
+		// Line 2: author, diff stats, time, position
 		var parts []string
 		parts = append(parts, authorStyle.Render("@"+p.Author.Login))
 		parts = append(parts, addStyle.Render(fmt.Sprintf("+%d", p.Additions))+delStyle.Render(fmt.Sprintf(" -%d", p.Deletions)))
 		parts = append(parts, dimStyle.Render(timeAgo(p.UpdatedAt)))
+		parts = append(parts, positionStyle.Render(fmt.Sprintf("%d of %d", i+1, len(m.detailPRs))))
 		if len(p.Labels) > 0 {
 			var names []string
 			for _, l := range p.Labels {
@@ -345,10 +489,78 @@ func (m model) View() string {
 		line2 := "     " + strings.Join(parts, dimStyle.Render(" · "))
 
 		s += line1 + "\n" + line2 + "\n"
-		if i < len(m.filtered)-1 {
+		if i < len(m.detailPRs)-1 {
 			s += "\n"
 		}
 	}
 
+	s += "\n" + helpStyle.Render("  ↑↓ navigate · enter checkout · esc back")
 	return s
+}
+
+// renderStackRow renders a collapsed stack entry in the top-level view.
+func (m model) renderStackRow(s stack, isCurrent bool) string {
+	cursor := "  "
+	if isCurrent {
+		cursor = accentStyle.Render("> ")
+	}
+
+	icon := stackIconStyle.Render("▶")
+	var title string
+	if isCurrent {
+		title = titleSelectedStyle.Render(s.Title)
+	} else {
+		title = titleStyle.Render(s.Title)
+	}
+	count := dimStyle.Render(fmt.Sprintf("(%d PRs)", len(s.PRs)))
+	line1 := fmt.Sprintf("%s%s %s %s", cursor, icon, title, count)
+
+	// Line 2: author, aggregate stats, time
+	var parts []string
+	if len(s.PRs) > 0 {
+		parts = append(parts, authorStyle.Render("@"+s.PRs[0].Author.Login))
+	}
+	parts = append(parts, addStyle.Render(fmt.Sprintf("+%d", s.TotalAdditions()))+delStyle.Render(fmt.Sprintf(" -%d", s.TotalDeletions())))
+	parts = append(parts, dimStyle.Render(timeAgo(s.LatestUpdate())))
+
+	line2 := "     " + strings.Join(parts, dimStyle.Render(" · "))
+
+	return line1 + "\n" + line2 + "\n"
+}
+
+// renderPRRow renders a standalone PR entry in the top-level view.
+func (m model) renderPRRow(p pr, isCurrent bool) string {
+	cursor := "  "
+	if isCurrent {
+		cursor = accentStyle.Render("> ")
+	}
+
+	var num, title string
+	if isCurrent {
+		num = numberSelectedStyle.Render(fmt.Sprintf("#%d", p.Number))
+		title = titleSelectedStyle.Render(p.Title)
+	} else {
+		num = numberStyle.Render(fmt.Sprintf("#%d", p.Number))
+		title = titleStyle.Render(p.Title)
+	}
+	line1 := fmt.Sprintf("%s%s %s", cursor, num, title)
+	if p.IsDraft {
+		line1 += " " + draftStyle.Render("[draft]")
+	}
+
+	var parts []string
+	parts = append(parts, authorStyle.Render("@"+p.Author.Login))
+	parts = append(parts, addStyle.Render(fmt.Sprintf("+%d", p.Additions))+delStyle.Render(fmt.Sprintf(" -%d", p.Deletions)))
+	parts = append(parts, dimStyle.Render(timeAgo(p.UpdatedAt)))
+	if len(p.Labels) > 0 {
+		var names []string
+		for _, l := range p.Labels {
+			names = append(names, l.Name)
+		}
+		parts = append(parts, labelStyle.Render(strings.Join(names, ", ")))
+	}
+
+	line2 := "     " + strings.Join(parts, dimStyle.Render(" · "))
+
+	return line1 + "\n" + line2 + "\n"
 }

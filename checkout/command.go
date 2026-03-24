@@ -6,9 +6,12 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/zshuzh/wt/internal/git"
+	"github.com/zshuzh/wt/internal/scripts"
 )
 
-type Options struct{}
+type Options struct {
+	Setup bool `help:"Run init scripts from .wt/ after creating the worktree"`
+}
 
 func (o Options) Run() error {
 	if git.IsGraphiteRepo() {
@@ -43,6 +46,13 @@ func (o Options) runGraphite() error {
 
 	fmt.Println(path)
 	fmt.Println("graphite")
+
+	if o.Setup {
+		if err := scripts.SelectAndRun(root, path, "", nil); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -112,5 +122,12 @@ func (o Options) runDefault() error {
 	}
 
 	fmt.Println(path)
+
+	if o.Setup {
+		if err := scripts.SelectAndRun(root, path, selectedBranch, nil); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

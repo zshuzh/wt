@@ -5,11 +5,13 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/zshuzh/wt/internal/git"
+	"github.com/zshuzh/wt/internal/scripts"
 )
 
 type Options struct {
 	Path    string `arg:"" optional:"" help:"Path for the new worktree"`
 	Message string `arg:"" optional:"" help:"Commit message (creates a branch via gt c -m)"`
+	Setup   bool   `help:"Run init scripts from .wt/ after creating the worktree"`
 }
 
 func (o Options) Run() error {
@@ -43,6 +45,8 @@ func (o Options) Run() error {
 		path = root + "-" + path
 	}
 
+	var branch string
+
 	if message != "" {
 		// Get source branch before gt c moves us off it
 		source, err := git.GetCurrentBranch()
@@ -56,7 +60,7 @@ func (o Options) Run() error {
 		}
 
 		// Get the branch name Graphite created
-		branch, err := git.GetCurrentBranch()
+		branch, err = git.GetCurrentBranch()
 		if err != nil {
 			return err
 		}
@@ -77,5 +81,12 @@ func (o Options) Run() error {
 	}
 
 	fmt.Println(path)
+
+	if o.Setup {
+		if err := scripts.SelectAndRun(root, path, branch, nil); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

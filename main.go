@@ -21,7 +21,7 @@ var version = "dev"
 type Wt struct {
 	Version  kong.VersionFlag   `short:"v" help:"Print version information"`
 	Init     initcmd.Options   `cmd:"" help:"Print shell integration code"`
-	List     list.Options      `cmd:"" aliases:"l" help:"List current worktrees"`
+	List     list.Options      `cmd:"" aliases:"ls" help:"List current worktrees"`
 	Switch   switchcmd.Options `cmd:"" aliases:"s" help:"Switch to a worktree"`
 	Add      add.Options       `cmd:"" aliases:"a" help:"Add a new worktree"`
 	Checkout checkout.Options  `cmd:"" aliases:"co" help:"Add a new worktree for an existing branch"`

@@ -42,6 +42,12 @@ wt() {
         cd "$dir"
       fi
       ;;
+    cd)
+      local dir=$(command wt "$@")
+      if [ -n "$dir" ]; then
+        cd "$dir"
+      fi
+      ;;
     *)
       command wt "$@"
       ;;

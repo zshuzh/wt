@@ -7,6 +7,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/zshuzh/wt/add"
+	cdcmd "github.com/zshuzh/wt/cd"
 	"github.com/zshuzh/wt/checkout"
 	initcmd "github.com/zshuzh/wt/init"
 	"github.com/zshuzh/wt/list"
@@ -28,6 +29,7 @@ type Wt struct {
 	Remove   remove.Options    `cmd:"" aliases:"rm" help:"Remove an existing worktree"`
 	Review   review.Options    `cmd:"" aliases:"r" help:"Review a PR in a new worktree"`
 	Setup    setup.Options     `cmd:"" help:"Run init scripts from .wt/ in the current worktree"`
+	Cd       cdcmd.Options     `cmd:"" help:"Navigate to an aliased directory"`
 }
 
 func init() {

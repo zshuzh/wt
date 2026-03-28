@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/zshuzh/wt/internal/git"
 )
 
@@ -20,15 +21,11 @@ type colorChoice struct {
 }
 
 var colors = []colorChoice{
-	{Name: "Red", Background: "#b5200d", Foreground: "#ffffff"},
-	{Name: "Orange", Background: "#c45221", Foreground: "#ffffff"},
-	{Name: "Yellow", Background: "#b8a825", Foreground: "#15202b"},
-	{Name: "Green", Background: "#2d8b46", Foreground: "#ffffff"},
-	{Name: "Teal", Background: "#1d7a7a", Foreground: "#ffffff"},
-	{Name: "Blue", Background: "#1a5fb4", Foreground: "#ffffff"},
-	{Name: "Purple", Background: "#813d9c", Foreground: "#ffffff"},
-	{Name: "Pink", Background: "#c44569", Foreground: "#ffffff"},
-	{Name: "None (clear color)", Background: "", Foreground: ""},
+	{Name: "Isometric Pink", Background: "#f9dfe2", Foreground: "#1a1a1a"},
+	{Name: "Reforestation Green", Background: "#3a9e52", Foreground: "#ffffff"},
+	{Name: "Soil Brown", Background: "#8c6a2e", Foreground: "#ffffff"},
+	{Name: "Climate Disaster Red", Background: "#ee1111", Foreground: "#ffffff"},
+	{Name: "None", Background: "", Foreground: ""},
 }
 
 func (o Options) Run() error {
@@ -39,7 +36,11 @@ func (o Options) Run() error {
 
 	opts := make([]huh.Option[int], len(colors))
 	for i, c := range colors {
-		opts[i] = huh.NewOption(c.Name, i)
+		label := c.Name
+		if c.Background != "" {
+			label = lipgloss.NewStyle().Foreground(lipgloss.Color(c.Background)).Render(c.Name)
+		}
+		opts[i] = huh.NewOption(label, i)
 	}
 
 	var selected int
@@ -89,8 +90,6 @@ func applyColor(wtPath string, choice colorChoice) error {
 
 		customizations["titleBar.activeBackground"] = choice.Background
 		customizations["titleBar.activeForeground"] = choice.Foreground
-		customizations["activityBar.background"] = choice.Background
-		customizations["activityBar.foreground"] = choice.Foreground
 		customizations["statusBar.background"] = choice.Background
 		customizations["statusBar.foreground"] = choice.Foreground
 
@@ -123,7 +122,8 @@ func applyColor(wtPath string, choice colorChoice) error {
 	if choice.Background == "" {
 		fmt.Fprintln(os.Stderr, "Cleared worktree color.")
 	} else {
-		fmt.Fprintf(os.Stderr, "Set worktree color to %s.\n", choice.Name)
+		coloredName := lipgloss.NewStyle().Foreground(lipgloss.Color(choice.Background)).Render(choice.Name)
+		fmt.Fprintf(os.Stderr, "Set worktree color to %s.\n", coloredName)
 	}
 
 	return nil

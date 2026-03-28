@@ -9,6 +9,7 @@ import (
 	"github.com/zshuzh/wt/add"
 	cdcmd "github.com/zshuzh/wt/cd"
 	"github.com/zshuzh/wt/checkout"
+	"github.com/zshuzh/wt/color"
 	initcmd "github.com/zshuzh/wt/init"
 	"github.com/zshuzh/wt/list"
 	"github.com/zshuzh/wt/remove"
@@ -29,6 +30,7 @@ type Wt struct {
 	Remove   remove.Options    `cmd:"" aliases:"rm" help:"Remove an existing worktree"`
 	Review   review.Options    `cmd:"" aliases:"r" help:"Review a PR in a new worktree"`
 	Setup    setup.Options     `cmd:"" help:"Run init scripts from .wt/ in the current worktree"`
+	Color    color.Options     `cmd:"" help:"Set a color theme for the current worktree in VSCode"`
 	Cd       cdcmd.Options     `cmd:"" help:"Navigate to an aliased directory"`
 }
 
